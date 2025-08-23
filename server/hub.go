@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/belguitR/goChatApp/models"
+	"github.com/gorilla/websocket"
 )
 
 type Hub struct {
@@ -16,11 +17,11 @@ func NewHub() *Hub {
 	}
 }
 
-func register(c *Client, h *Hub) {
+func (h *Hub) Register(c *Client) {
 	h.Clients = append(h.Clients, c)
 }
 
-func unregister(c *Client, h *Hub) {
+func (h *Hub) Unregister(c *Client) {
 	idx := h.findPosition(c)
 	if idx == -1 {
 		return
@@ -28,7 +29,15 @@ func unregister(c *Client, h *Hub) {
 	h.Clients = append(h.Clients[:idx], h.Clients[idx+1:]...)
 }
 
-func broadcast()
+func (h *Hub) Broadcast(sender *Client, data []byte) {
+	for i := 0; i < len(h.Clients); i++ {
+		c := h.Clients[i]
+		err := c.Conn.WriteMessage(websocket.TextMessage, data)
+		if err != nil {
+			h.Unregister(c)
+		}
+	}
+}
 
 func (h *Hub) findPosition(c *Client) int {
 	i := 0
