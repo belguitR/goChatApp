@@ -5,4 +5,12 @@ type User struct {
 	Messages []Message `json:"messages"`
 }
 
-func newUs
+func newUser(name string) *user {
+	return &User{
+		Name: name,
+	}
+}
+
+func (u *User) AddMessage(m Message) {
+	u.Message = append(u.messages, m)
+}
