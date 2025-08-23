@@ -11,7 +11,7 @@ func main() {
 	hub := server.NewHub()
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		server.client.HandleWebSocket(hub, w, r)
+		server.HandleWebSocket(hub, w, r)
 	})
 
 	log.Println("Server started on :8080")

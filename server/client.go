@@ -1,10 +1,11 @@
 package server
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/belguitR/goChatApp/models"
 	"github.com/gorilla/websocket"
-
-	"net/http"
 )
 
 type Client struct {
@@ -32,19 +33,22 @@ func HandleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		User: &models.User{Name: "Guest"},
 	}
 	hub.Register(client)
-	defer hub.Unregister(client)
 	go client.readLoop()
 
 }
 
 func (c *Client) readLoop() {
-	defer c.Conn.Close()
+	defer func() {
+		c.Hub.Unregister(c)
+		c.Conn.Close()
+	}()
 
 	for {
 		_, data, err := c.Conn.ReadMessage()
 		if err != nil {
 			break
 		}
+		log.Println("server recv:", string(data))
 
 		c.Hub.Messages = append(c.Hub.Messages, &models.Message{
 			Content: string(data),

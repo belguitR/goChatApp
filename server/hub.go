@@ -1,6 +1,8 @@
 package server
 
 import (
+	"sync"
+
 	"github.com/belguitR/goChatApp/models"
 	"github.com/gorilla/websocket"
 )
@@ -8,6 +10,7 @@ import (
 type Hub struct {
 	Clients  []*Client
 	Messages []*models.Message
+	mu       sync.RWMutex
 }
 
 func NewHub() *Hub {
@@ -18,20 +21,27 @@ func NewHub() *Hub {
 }
 
 func (h *Hub) Register(c *Client) {
+	h.mu.Lock()
 	h.Clients = append(h.Clients, c)
+	h.mu.Unlock()
 }
 
 func (h *Hub) Unregister(c *Client) {
+	h.mu.Lock()
 	idx := h.findPosition(c)
 	if idx == -1 {
 		return
 	}
 	h.Clients = append(h.Clients[:idx], h.Clients[idx+1:]...)
+	h.mu.Unlock()
 }
 
 func (h *Hub) Broadcast(sender *Client, data []byte) {
-	for i := 0; i < len(h.Clients); i++ {
-		c := h.Clients[i]
+	h.mu.RLock()
+	clients := make([]*Client, len(h.Clients))
+	copy(clients, h.Clients)
+	h.mu.RUnlock()
+	for _, c := range clients {
 		err := c.Conn.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
 			h.Unregister(c)
