@@ -1,16 +1,11 @@
 package models
 
 type User struct {
-	Name     string    `json:"name"`
-	Messages []Message `json:"messages"`
+	Name string `json:"name"`
 }
 
-func newUser(name string) *user {
+func newUser(name string) *User {
 	return &User{
 		Name: name,
 	}
-}
-
-func (u *User) AddMessage(m Message) {
-	u.Message = append(u.messages, m)
 }
