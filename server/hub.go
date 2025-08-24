@@ -66,3 +66,10 @@ func (h *Hub) findPosition(c *Client) int {
 	return -1
 }
 
+// in server/hub.go
+func (h *Hub) OnlineCount() int {
+  h.mu.RLock()
+  defer h.mu.RUnlock()
+  return len(h.Clients)
+}
+

@@ -1,0 +1,26 @@
+<div class="chat-container">
+  <h1>GoChat</h1>
+
+  <div class="online-users" *ngIf="connected">
+    <span class="dot"></span>
+    <span class="count">{{ onlineCount() }}</span> users online
+  </div>
+
+  <div *ngIf="!connected" class="join-screen">
+    <input [(ngModel)]="username" placeholder="Enter your name" (keyup.enter)="connect()" />
+    <button (click)="connect()">Join Chat</button>
+  </div>
+
+  <div *ngIf="connected" class="chat-screen">
+    <div class="messages" #messagesContainer>
+      <div *ngFor="let msg of messages()" class="message">
+        {{ msg }}
+      </div>
+    </div>
+
+    <div class="input-row">
+      <input [(ngModel)]="message" placeholder="Type a message" (keyup.enter)="send()" />
+      <button (click)="send()">Send</button>
+    </div>
+  </div>
+</div>
