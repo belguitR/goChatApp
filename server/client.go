@@ -43,18 +43,27 @@ func (c *Client) readLoop() {
 		c.Conn.Close()
 	}()
 
+		nameMessage:= true // the first message from the clinet will always be the username
+
 	for {
 		_, data, err := c.Conn.ReadMessage()
 		if err != nil {
 			break
 		}
+		if nameMessage {
+			c.User = &models.User{Name : string(data)}
+			nameMessage = false 
+			log.Println("user  ",c.User.Name)
+			continue
+		}
 		log.Println("server recv:", string(data))
-
+		
+		msg := c.User.Name + ": " + string(data)
 		c.Hub.Messages = append(c.Hub.Messages, &models.Message{
 			Content: string(data),
 			User:    c.User,
 		})
 
-		c.Hub.Broadcast(c, data)
+		c.Hub.Broadcast(c, []byte(msg))
 	}
 }

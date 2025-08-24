@@ -2,7 +2,7 @@ package server
 
 import (
 	"sync"
-
+	"log"
 	"github.com/belguitR/goChatApp/models"
 	"github.com/gorilla/websocket"
 )
@@ -28,12 +28,14 @@ func (h *Hub) Register(c *Client) {
 
 func (h *Hub) Unregister(c *Client) {
 	h.mu.Lock()
+	defer h.mu.Unlock()
+
 	idx := h.findPosition(c)
 	if idx == -1 {
 		return
 	}
+
 	h.Clients = append(h.Clients[:idx], h.Clients[idx+1:]...)
-	h.mu.Unlock()
 }
 
 func (h *Hub) Broadcast(sender *Client, data []byte) {
@@ -41,13 +43,17 @@ func (h *Hub) Broadcast(sender *Client, data []byte) {
 	clients := make([]*Client, len(h.Clients))
 	copy(clients, h.Clients)
 	h.mu.RUnlock()
+
 	for _, c := range clients {
+		log.Println("Broadcasting to", c.User.Name, ":", string(data))
 		err := c.Conn.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			h.Unregister(c)
+			log.Println("failed to send to", c.User.Name, err)
+			go h.Unregister(c)
 		}
 	}
 }
+
 
 func (h *Hub) findPosition(c *Client) int {
 	i := 0
@@ -59,3 +65,4 @@ func (h *Hub) findPosition(c *Client) int {
 	}
 	return -1
 }
+
