@@ -10,7 +10,7 @@ export class ChatService {
   public messages$ = this.messagesSubject.asObservable();
 
   connect(username: string) {
-    this.ws = new WebSocket('ws://localhost:8080/ws');
+    this.ws = new WebSocket(`${window.location.origin}/ws`);
 
     this.ws.onopen = () => {
       console.log('Connected to WebSocket');
@@ -30,10 +30,10 @@ export class ChatService {
       this.ws.send(msg);
     }
   }
-  
+
   async getOnlineCount(): Promise<number> {
     try {
-      const res = await fetch('http://localhost:8080/online');
+      const res = await fetch(`${window.location.origin}/online`);
       if (!res.ok) throw new Error('network');
       const j = await res.json();
       return j?.online ?? 0;

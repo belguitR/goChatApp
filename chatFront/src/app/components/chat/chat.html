@@ -1,15 +1,19 @@
 <div class="chat-container">
   <h1>GoChat</h1>
 
-  <div class="online-users" *ngIf="connected">
-    <span class="dot"></span>
-    <span class="count">{{ onlineCount() }}</span> users online
-  </div>
+  @if (connected) {
+		<div class="online-users" >
+			<span class="dot"></span>
+			<span class="count">{{ onlineCount() }}</span> users online
+		</div>
+	}
 
-  <div *ngIf="!connected" class="join-screen">
-    <input [(ngModel)]="username" placeholder="Enter your name" (keyup.enter)="connect()" />
-    <button (click)="connect()">Join Chat</button>
-  </div>
+  @if (!connected) {
+		<div class="join-screen">
+			<input [(ngModel)]="username" placeholder="Enter your name" (keyup.enter)="connect()" />
+			<button (click)="connect()">Join Chat</button>
+		</div>
+    }
 
   <div *ngIf="connected" class="chat-screen">
     <div class="messages" #messagesContainer>
