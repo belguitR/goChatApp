@@ -1,25 +1,29 @@
 package server
 
 import (
-	"log"
 	"net/http"
+	"sync"
 
 	"github.com/belguitR/goChatApp/models"
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
-	Hub  *Hub
-	Conn *websocket.Conn
-	User *models.User
+	Hub     *Hub
+	Conn    *websocket.Conn
+	User    *models.User
+	writeMu sync.Mutex
+}
+
+func (c *Client) Send(data []byte) error {
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
+	return c.Conn.WriteMessage(websocket.TextMessage, data)
 }
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
 }
 
 func HandleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
@@ -43,7 +47,7 @@ func (c *Client) readLoop() {
 		c.Conn.Close()
 	}()
 
-		nameMessage:= true // the first message from the clinet will always be the username
+	nameMessage := true // The first message from the client is its display name.
 
 	for {
 		_, data, err := c.Conn.ReadMessage()
@@ -51,19 +55,17 @@ func (c *Client) readLoop() {
 			break
 		}
 		if nameMessage {
-			c.User = &models.User{Name : string(data)}
-			nameMessage = false 
-			log.Println("user  ",c.User.Name)
+			c.User = &models.User{Name: string(data)}
+			nameMessage = false
 			continue
 		}
-		log.Println("server recv:", string(data))
-		
+
 		msg := c.User.Name + ": " + string(data)
-		c.Hub.Messages = append(c.Hub.Messages, &models.Message{
+		c.Hub.RecordMessage(&models.Message{
 			Content: string(data),
 			User:    c.User,
 		})
 
-		c.Hub.Broadcast(c, []byte(msg))
+		c.Hub.Broadcast([]byte(msg))
 	}
 }
